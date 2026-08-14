@@ -31,13 +31,13 @@
         <div class="recipes-create-form-label-input">
           <div id="ingredient-list">
               <div class="ingredient-row">
-                  <select name="ingredients[0][ingredient_id]">
-                      @foreach ($ingredients as $ingredient)
-                          <option value="{{ $ingredient->id }}">
-                              {{ $ingredient->name }} ({{ $ingredient->unit }})
-                          </option>
-                      @endforeach
-                  </select>
+                <select name="ingredients[0][ingredient_id]" class="ingredient-select">
+                  @foreach ($ingredients as $ingredient)
+                      <option value="{{ $ingredient->id }}">
+                          {{ $ingredient->name }} ({{ $ingredient->unit }})
+                      </option>
+                  @endforeach
+                </select>
 
                   <input
                       type="number"
@@ -57,6 +57,7 @@
       </form>
     </div>
   </section>
+<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
   <script>
     let index = 1;
 
@@ -71,5 +72,14 @@
 
         index++;
     });
+
+    new TomSelect(".ingredient-select", {
+    create: false,
+    sortField: {
+        field: "text",
+        direction: "asc"
+    }
+    });
+
 </script>
 </x-layouts::main>

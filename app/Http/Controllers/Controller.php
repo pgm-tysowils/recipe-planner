@@ -30,7 +30,7 @@ abstract class Controller
     }
 
     function getWeekPlannings() {
-        $recipes = Recipes::where('user_id', Auth::id())->get();
+        $recipes = Recipes::get();
         $planning = Planning::where('user_id', Auth::id())->get()->toArray();
         $ingredients = $ingredients = Auth::user()
             ->ingredients()
@@ -142,7 +142,18 @@ abstract class Controller
 
     function createableRecipes($recipes) {
         $craftable = [];
-        $ingredients = Auth::user()->ingredients()->get();
+        $ingredients = Auth::user()
+            ->ingredients()
+            ->withPivot('weight')
+            ->get()
+            ->map(function ($ingredient) {
+                return [
+                    'id' => $ingredient->id,
+                    'name' => $ingredient->name,
+                    'weight' => $ingredient->pivot->weight,
+                    'unit' => $ingredient->unit,
+                ];
+            });
 
         foreach ($recipes as $recipe) {
         
@@ -151,9 +162,14 @@ abstract class Controller
             foreach ($recipe->ingredients as $ingredient) {
         
                 $required = $ingredient->pivot->weight;
-                $available = $ingredients[$ingredient->id] ?? 0;
-        
-                if ($available < $required) {
+                $curIngredientWeight = 0;
+                foreach ($ingredients as $posIngredient) {
+                    if ($posIngredient['id'] == $ingredient->id) {
+                        $curIngredientWeight = $posIngredient['weight'];
+                    }
+                }
+                
+                if ($curIngredientWeight < $required) {
                     $canMake = false;
                     break;
                 }

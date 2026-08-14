@@ -33,7 +33,7 @@ class RecipesController extends Controller
     }
 
     function create() {
-        $ingredients = Ingredients::get();
+        $ingredients = Ingredients::orderBy('name')->get();
         return view('recipes.create', ['ingredients' => $ingredients]);
     }
 
