@@ -57,29 +57,54 @@
       </form>
     </div>
   </section>
-<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
   <script>
     let index = 1;
 
-    document.getElementById('add-ingredient').addEventListener('click', function () {
-        const row = document.querySelector('.ingredient-row').cloneNode(true);
+    const ingredientList = document.getElementById('ingredient-list');
+    const addIngredientButton = document.getElementById('add-ingredient');
 
-        row.querySelector('select').name = `ingredients[${index}][ingredient_id]`;
-        row.querySelector('input').name = `ingredients[${index}][amount]`;
-        row.querySelector('input').value = '';
+    const tomSelectOptions = {
+        create: false,
+        sortField: {
+            field: "text",
+            direction: "asc"
+        }
+    };
 
-        document.getElementById('ingredient-list').appendChild(row);
+    document.querySelectorAll('.ingredient-select').forEach(select => {
+        new TomSelect(select, tomSelectOptions);
+    });
+
+    addIngredientButton.addEventListener('click', function () {
+        const row = document.createElement('div');
+        row.classList.add('ingredient-row');
+
+        const select = document.createElement('select');
+        select.name = `ingredients[${index}][ingredient_id]`;
+        select.classList.add('ingredient-select');
+
+        @foreach ($ingredients as $ingredient)
+            const option{{ $ingredient->id }} = document.createElement('option');
+            option{{ $ingredient->id }}.value = "{{ $ingredient->id }}";
+            option{{ $ingredient->id }}.textContent = "{{ $ingredient->name }} ({{ $ingredient->unit }})";
+            select.appendChild(option{{ $ingredient->id }});
+        @endforeach
+
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.step = '0.01';
+        input.name = `ingredients[${index}][amount]`;
+        input.placeholder = 'Amount';
+
+        row.appendChild(select);
+        row.appendChild(input);
+
+        ingredientList.appendChild(row);
+
+        new TomSelect(select, tomSelectOptions);
 
         index++;
     });
-
-    new TomSelect(".ingredient-select", {
-    create: false,
-    sortField: {
-        field: "text",
-        direction: "asc"
-    }
-    });
-
 </script>
 </x-layouts::main>

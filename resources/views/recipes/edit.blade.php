@@ -1,6 +1,6 @@
-<x-layouts::main title="Creeer een nieuw recept">
+<x-layouts::main title="Pas recept aan">
   <section class="recipes-create-page">
-    <h1 class="recipes-page-title">Creeer een nieuw recept</h1>
+    <h1 class="recipes-page-title">Pas recept aan</h1>
     <div class="recipes-page-actions">
       <form action="/recipes/{{$recipe->id}}" method="POST" class="recipes-create-form">
         <div class="recipes-create-form-label-input">
@@ -31,7 +31,7 @@
           <div id="ingredient-list">
           @foreach($recipe->ingredients as $index => $ingredient)
               <div class="ingredient-row">
-                  <select name="ingredients[{{ $index }}][ingredient_id]">
+                  <select name="ingredients[{{ $index }}][ingredient_id]" class="ingredient-select">
                       @foreach($allIngredients as $item)
                           <option value="{{ $item->id }}"
                               @selected($item->id == $ingredient->id)>
@@ -59,18 +59,36 @@
       </form>
     </div>
   </section>
-  <script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tom-select/dist/js/tom-select.complete.min.js"></script>
+
+<script>
     let index = {{ count($recipe->ingredients ?? []) }};
 
-    document.getElementById('add-ingredient').addEventListener('click', function () {
-    
-    let row;
-      if (index == 0) {
-        row = document.createElement('div');
+    const ingredientList = document.getElementById('ingredient-list');
+    const addIngredientButton = document.getElementById('add-ingredient');
+
+    const tomSelectOptions = {
+        create: false,
+        sortField: {
+            field: "text",
+            direction: "asc"
+        }
+    };
+
+    // Initialize TomSelect on the ingredients that already exist
+    document.querySelectorAll('.ingredient-select').forEach(select => {
+        new TomSelect(select, tomSelectOptions);
+    });
+
+    addIngredientButton.addEventListener('click', function () {
+        const row = document.createElement('div');
         row.classList.add('ingredient-row');
 
+        // Create select
         const select = document.createElement('select');
         select.name = `ingredients[${index}][ingredient_id]`;
+        select.classList.add('ingredient-select');
 
         @foreach ($allIngredients as $ingredient)
             const option{{ $ingredient->id }} = document.createElement('option');
@@ -79,11 +97,13 @@
             select.appendChild(option{{ $ingredient->id }});
         @endforeach
 
+        // Create amount input
         const input = document.createElement('input');
         input.type = 'number';
         input.step = '0.01';
         input.name = `ingredients[${index}][amount]`;
 
+        // Create remove button
         const button = document.createElement('button');
         button.type = 'button';
         button.classList.add('remove-ingredient');
@@ -92,35 +112,30 @@
         row.appendChild(select);
         row.appendChild(input);
         row.appendChild(button);
-      } else {
-        row = document.querySelector('.ingredient-row').cloneNode(true);
-      }
 
-        // reset values
-        row.querySelector('input').value = '';
+        ingredientList.appendChild(row);
 
-        // reset select to first option
-        row.querySelector('select').selectedIndex = 0;
-
-        // rename fields properly
-        row.querySelector('select').name = `ingredients[${index}][ingredient_id]`;
-        row.querySelector('input').name = `ingredients[${index}][amount]`;
-
-        document.getElementById('ingredient-list').appendChild(row);
+        new TomSelect(select, tomSelectOptions);
 
         index++;
     });
 
-    document.getElementById('ingredient-list').addEventListener('click', function (e) {
-    if (e.target.classList.contains('remove-ingredient')) {
-        const removedIndex = Array.from(document.querySelectorAll('.ingredient-row')).indexOf(e.target.closest('.ingredient-row'));
-        for (i = removedIndex + 1; i < index; i++) {
-            const row = document.querySelector(`.ingredient-row:nth-child(${i + 1})`);
-            row.querySelector('select').name = `ingredients[${i - 1}][ingredient_id]`;
-            row.querySelector('input').name = `ingredients[${i - 1}][amount]`;
+    ingredientList.addEventListener('click', function (e) {
+        if (!e.target.classList.contains('remove-ingredient')) {
+            return;
         }
+
         e.target.closest('.ingredient-row').remove();
-        index--;
-    }});
-  </script>
+
+        document.querySelectorAll('.ingredient-row').forEach((row, i) => {
+            row.querySelector('select').name =
+                `ingredients[${i}][ingredient_id]`;
+
+            row.querySelector('input').name =
+                `ingredients[${i}][amount]`;
+        });
+
+        index = document.querySelectorAll('.ingredient-row').length;
+    });
+</script>
 </x-layouts::main>
